@@ -28,6 +28,7 @@ public class MyBot : IChessBot
         double alpha = double.MinValue;
         double beta = double.MaxValue;
         Move bestMove = Move.NullMove;
+        Console.WriteLine(MaterialAndPositionEvaluation());
 
         foreach (Move move in board.GetLegalMoves())
         {
@@ -70,12 +71,17 @@ public class MyBot : IChessBot
             board.UndoMove(move);
 
             if (maximizingPlayer)
+            {
                 alpha = Math.Max(alpha, value);
+                if (alpha >= beta)
+                    break;
+            }
             else
+            {
                 beta = Math.Min(beta, value);
-
-            if (alpha >= beta)
-                break;
+                if (alpha >= beta)
+                    break;
+            }
         }
 
         return maximizingPlayer ? alpha : beta;
@@ -92,12 +98,9 @@ public class MyBot : IChessBot
                 ulong bitboard = board.GetPieceBitboard((PieceType)piece, color == 0);
                 while (bitboard != 0)
                 {
-                    int squareIndex = (int)Math.Log2(((bitboard ^ (bitboard - 1)) >> 1) + 1),
-                        f = squareIndex / 8,
-                        r = squareIndex % 8;
+                    int squareIndex = (int)Math.Log2(((bitboard ^ (bitboard - 1)) >> 1) + 1), f = squareIndex / 8, r = squareIndex % 8;
                     bitboard &= ~(1UL << squareIndex);
-                    evaluation += (1 - 2 * color) * (pieceValues[piece] +
-                        (byte)(((squareTable[(color == 0 ? f : 7 - f) * 8 + r]) >> (piece * 8)) & 0xff));
+                    evaluation += (1 - 2 * color) * (pieceValues[piece] + (byte)(((squareTable[(color == 0 ? f : 7 - f) * 8 + r]) >> (piece * 8)) & 0xff));
                 }
             }
         }

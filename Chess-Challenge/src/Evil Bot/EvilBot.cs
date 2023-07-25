@@ -118,7 +118,7 @@ namespace ChessChallenge.Example
         }
 
         // BitScanReverse method to find the index of the most significant bit set to 1 in an integer
-        private int BitScanReverse(ulong bitboard)
+        public int BitScanReverse(ulong bitboard)
         {
             int index = 0;
 
@@ -131,7 +131,7 @@ namespace ChessChallenge.Example
             return index - 1;
         }
 
-        private int GetSquareTableEvaluation(PieceType pieceType, int squareIndex, int color)
+        public int GetSquareTableEvaluation(PieceType pieceType, int squareIndex, int color)
         {
             if (pieceType == PieceType.None) return 0;
             int file = squareIndex % 8; // Get the file (column) index
@@ -141,7 +141,5 @@ namespace ChessChallenge.Example
 
             return ((byte)((val >> ((int)(pieceType - 1) * 8)) & 0xff) * (color == 0 ? 1 : -1)) - 50;
         }
-
-
     }
 }
