@@ -24,11 +24,12 @@ public class MyBot : IChessBot
     {
         this.board = board;
         bool isWhite = board.IsWhiteToMove;
-        double bestValue = isWhite ? int.MinValue : int.MaxValue;
+
         double alpha = double.MinValue;
         double beta = double.MaxValue;
+        double bestValue = isWhite ? int.MinValue : int.MaxValue;
+
         Move bestMove = Move.NullMove;
-        Console.WriteLine(MaterialAndPositionEvaluation());
 
         foreach (Move move in board.GetLegalMoves())
         {
@@ -105,6 +106,27 @@ public class MyBot : IChessBot
             }
         }
 
+        return evaluation;
+    }
+
+    public double materialEvaluation()
+    {
+        double evaluation = 0;
+        foreach (PieceType pieceType in Enum.GetValues(typeof(PieceType)))
+        {
+            for (int color = 0; color < 2; color++)
+            {
+                ulong bitboard = board.GetPieceBitboard(pieceType, color == 0);
+
+                int count = 0;
+                while (bitboard != 0)
+                {
+                    bitboard &= bitboard - 1;
+                    count++;
+                }
+                evaluation += count * (color == 0 ? pieceValues[(int)pieceType] : -pieceValues[(int)pieceType]);
+            }
+        }
         return evaluation;
     }
 }
