@@ -1,21 +1,25 @@
 ﻿<Properties StartupConfiguration="{2803E64F-15AC-430B-A5A2-69C00EA7505F}|Default">
   <MonoDevelop.Ide.Workbench ActiveDocument="Chess-Challenge/src/My Bot/MyBot.cs">
     <Files>
-      <File FileName="Chess-Challenge/src/My Bot/MyBot.cs" Line="168" Column="24" />
-      <File FileName="Chess-Challenge/src/Evil Bot/EvilBot.cs" />
-      <File FileName="Chess-Challenge/src/Framework/Chess/Board/Board.cs" />
-      <File FileName="Chess-Challenge/src/API/Board.cs" Line="303" Column="20" />
+      <File FileName="Chess-Challenge/src/My Bot/MyBot.cs" Line="10" Column="17" />
+      <File FileName="Chess-Challenge/src/Framework/Chess/Board/PieceList.cs" Line="29" Column="1" />
+      <File FileName="Chess-Challenge/src/Evil Bot/EvilBot.cs" Line="121" Column="15" />
+      <File FileName="Chess-Challenge/src/Framework/Chess/Helpers/FenUtility.cs" Line="8" Column="105" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
-          <Node name="Chess-Challenge" expanded="True">
-            <Node name="Chess-Challenge">
+          <Node name="Chess-Challenge">
+            <Node name="Chess-Challenge" expanded="True">
               <Node name="src" expanded="True">
-                <Node name="API" expanded="True" />
-                <Node name="My Bot" expanded="True">
-                  <Node name="MyBot.cs" selected="True" />
+                <Node name="Evil Bot" expanded="True" />
+                <Node name="Framework" expanded="True">
+                  <Node name="Chess" expanded="True">
+                    <Node name="Board" expanded="True" />
+                    <Node name="Helpers" expanded="True" />
+                  </Node>
                 </Node>
+                <Node name="My Bot" expanded="True" />
               </Node>
             </Node>
           </Node>
