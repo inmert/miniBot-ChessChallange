@@ -36,6 +36,8 @@ public class MyBot : IChessBot
             board.MakeMove(move);
 
             double value = Minimax(initDepth, alpha, beta, !isWhite);
+            if (board.IsInCheckmate())
+                return move;
 
             board.UndoMove(move);
 
@@ -60,6 +62,9 @@ public class MyBot : IChessBot
 
     public double Minimax(int depth, double alpha, double beta, bool maximizingPlayer)
     {
+        if (board.IsRepeatedPosition())
+            return materialEvaluation() - 100;
+
         if (depth == 0 || board.IsDraw() || board.IsInCheckmate())
             return MaterialAndPositionEvaluation();
 
