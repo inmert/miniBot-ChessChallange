@@ -1,5 +1,7 @@
 ﻿using ChessChallenge.API;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ChessChallenge.Example
 {
@@ -7,43 +9,50 @@ namespace ChessChallenge.Example
     // Plays randomly otherwise.
     public class EvilBot : IChessBot
     {
-        // Piece values: null, pawn, knight, bishop, rook, queen, king
+        /// Piece values: null, pawn, knight, bishop, rook, queen, king
         readonly int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
         readonly int initDepth = 3;
-
-        ulong[,] squareTable = new ulong[8, 8]
+        Board board;
+        ulong[] squareTable =
         {
-        { 22119922401330UL, 11167756454450UL, 11167756457010UL, 194198901810UL, 194198901810UL, 11167756457010UL, 11167756454450UL, 22119922401330UL },
-        { 22162788846180UL, 11210706787940UL, 11210706793060UL, 215590515300UL, 215590515300UL, 11210706793060UL, 11210706787940UL, 22162788846180UL },
-        { 22162788848700UL, 11210706793020UL, 11232181959750UL, 237066010960UL, 237066010960UL, 11232181959750UL, 11210706793020UL, 22162788848700UL },
-        { 22184263685175UL, 11210707121975UL, 11232181961020UL, 237066012235UL, 237066012235UL, 11232181961020UL, 11210707121975UL, 22184263685175UL },
-        { 33200854799410UL, 22205823070770UL, 22227298566450UL, 11232182289990UL, 11232182289990UL, 22227298566450UL, 22205823070770UL, 33179379962930UL },
-        { 44153021404215UL, 33222414841645UL, 33222414842920UL, 33222414844210UL, 33222414844210UL, 33222414842920UL, 33200940005165UL, 44153021404215UL },
-        { 77138538007095UL, 77181572554300UL, 55212814512700UL, 55191339677470UL, 55191339677470UL, 55191339676220UL, 77181572554300UL, 77138538007095UL },
-        { 77095503790130UL, 88133570398770UL, 66143337845810UL, 55169696404530UL, 55169696404530UL, 66143337845810UL, 88133570398770UL, 77095503790130UL }
-        };
+        05662700134740480UL, 05673673944622080UL, 05673673945267200UL, 05679171503404800UL, 08499418828648960UL, 11303173479479040UL, 19747465729816320UL, 19736448970273280UL,
+        02858945652339200UL, 02869940937712640UL, 02869940939013120UL, 02869941023225600UL, 05684690706117120UL, 08504938199461120UL, 19758482573900800UL, 22562194022085120UL,
+        02858945652994560UL, 02869940939023360UL, 02875438581696000UL, 02875438582021120UL, 05690188433011200UL, 08504938199787520UL, 14134480515251200UL, 16932694488527360UL,
+        00049714918863360UL, 00055191171916800UL, 00060688898805760UL, 00060688899132160UL, 02875438666237440UL, 08504938200117760UL, 14128982957432320UL, 14123442279559680UL,
+        00049714918863360UL, 00055191171916800UL, 00060688898805760UL, 00060688899132160UL, 02875438666237440UL, 08504938200117760UL, 14128982957432320UL, 14123442279559680UL,
+        02858945652994560UL, 02869940939023360UL, 02875438581696000UL, 02875438582021120UL, 05690188433011200UL, 08504938199787520UL, 14128982957112320UL, 16932694488527360UL,
+        02858945652339200UL, 02869940937712640UL, 02869940939013120UL, 02869941023225600UL, 05684690706117120UL, 08499440641322240UL, 19758482573900800UL, 22562194022085120UL,
+        05662700134740480UL, 05673673944622080UL, 05673673945267200UL, 05679171503404800UL, 08493921270510080UL, 11303173479479040UL, 19747465729816320UL, 19736448970273280UL
+    };
 
         public Move Think(Board board, Timer timer)
         {
-            int bestValue = board.IsWhiteToMove ? int.MinValue : int.MaxValue;
-            int alpha = int.MinValue;
-            int beta = int.MaxValue;
+            this.board = board;
+            bool isWhite = board.IsWhiteToMove;
+
+            double alpha = double.MinValue;
+            double beta = double.MaxValue;
+            double bestValue = isWhite ? int.MinValue : int.MaxValue;
+
             Move bestMove = Move.NullMove;
 
             foreach (Move move in board.GetLegalMoves())
             {
                 board.MakeMove(move);
 
-                int value = Minimax(board, initDepth, alpha, beta, !board.IsWhiteToMove);
+                double value = Minimax(initDepth, alpha, beta, !isWhite);
+                if (board.IsInCheckmate())
+                    return move;
+
                 board.UndoMove(move);
 
-                if ((board.IsWhiteToMove && value > bestValue) || (!board.IsWhiteToMove && value < bestValue))
+                if ((isWhite && value > bestValue) || (!isWhite && value < bestValue))
                 {
                     bestValue = value;
                     bestMove = move;
                 }
 
-                if (board.IsWhiteToMove)
+                if (isWhite)
                 {
                     alpha = Math.Max(alpha, bestValue);
                 }
@@ -56,60 +65,58 @@ namespace ChessChallenge.Example
             return bestMove;
         }
 
-
-        public int Minimax(Board board, int depth, int alpha, int beta, bool maximizingPlayer)
+        public double Minimax(int depth, double alpha, double beta, bool maximizingPlayer)
         {
-            if (depth == 0)
-            {
-                return MaterialAndPositionEvaluation(board);
-            }
+            if (board.IsRepeatedPosition())
+                return (materialEvaluation() - balancer(maximizingPlayer));
+
+            if (depth == 0 || board.IsDraw() || board.IsInCheckmate())
+                return MaterialAndPositionEvaluation();
 
             foreach (Move move in board.GetLegalMoves())
             {
                 board.MakeMove(move);
 
-                int value = 0;
-
-                if (maximizingPlayer)
+                double value = Minimax(depth - 1, alpha, beta, !maximizingPlayer);
+                // Check for stalemate
+                if (board.GetLegalMoves().Length == 0 && !board.IsInCheck())
                 {
-                    value = Minimax(board, depth - 1, alpha, beta, false);
-                    alpha = Math.Max(alpha, value);
-                }
-                else
-                {
-                    value = Minimax(board, depth - 1, alpha, beta, true);
-                    beta = Math.Min(beta, value);
+                    value += balancer(maximizingPlayer);
                 }
 
                 board.UndoMove(move);
 
-                // Alpha-Beta Pruning
-                if (alpha >= beta)
-                    break;
+                if (maximizingPlayer)
+                {
+                    alpha = Math.Max(alpha, value);
+                    if (alpha >= beta)
+                        break;
+                }
+                else
+                {
+                    beta = Math.Min(beta, value);
+                    if (alpha >= beta)
+                        break;
+                }
             }
 
             return maximizingPlayer ? alpha : beta;
         }
 
-        // PS EVAL FUNCTION
-
-        public int MaterialAndPositionEvaluation(Board board)
+        public double MaterialAndPositionEvaluation()
         {
-            int evaluation = 0;
+            double evaluation = 0;
 
             for (int color = 0; color < 2; color++)
             {
-                foreach (PieceType pieceType in Enum.GetValues(typeof(PieceType)))
+                for (int piece = 1; piece < 7; piece++)
                 {
-                    ulong bitboard = board.GetPieceBitboard(pieceType, color == 0);
-                    int pieceValue = color == 0 ? pieceValues[(int)pieceType] : -pieceValues[(int)pieceType];
-
+                    ulong bitboard = board.GetPieceBitboard((PieceType)piece, color == 0);
                     while (bitboard != 0)
                     {
-                        int squareIndex = BitScanReverse(bitboard);
-                        bitboard &= ~(1UL << squareIndex); // Clear the least significant bit
-
-                        evaluation += pieceValue + GetSquareTableEvaluation(pieceType, squareIndex, color);
+                        int squareIndex = (int)Math.Log2(((bitboard ^ (bitboard - 1)) >> 1) + 1), f = squareIndex / 8, r = squareIndex % 8;
+                        bitboard &= ~(1UL << squareIndex);
+                        evaluation += (1 - 2 * color) * (pieceValues[piece] + (byte)(((squareTable[(color == 0 ? f : 7 - f) * 8 + r]) >> (piece * 8)) & 0xff));
                     }
                 }
             }
@@ -117,29 +124,41 @@ namespace ChessChallenge.Example
             return evaluation;
         }
 
-        // BitScanReverse method to find the index of the most significant bit set to 1 in an integer
-        public int BitScanReverse(ulong bitboard)
+        public double materialEvaluation()
         {
-            int index = 0;
-
-            while (bitboard != 0)
+            double evaluation = 0;
+            foreach (PieceType pieceType in Enum.GetValues(typeof(PieceType)))
             {
-                bitboard >>= 1;
-                index++;
-            }
+                for (int color = 0; color < 2; color++)
+                {
+                    ulong bitboard = board.GetPieceBitboard(pieceType, color == 0);
 
-            return index - 1;
+                    int count = 0;
+                    while (bitboard != 0)
+                    {
+                        bitboard &= bitboard - 1;
+                        count++;
+                    }
+                    evaluation += count * (color == 0 ? pieceValues[(int)pieceType] : -pieceValues[(int)pieceType]);
+                }
+            }
+            return evaluation;
         }
 
-        public int GetSquareTableEvaluation(PieceType pieceType, int squareIndex, int color)
+        public int GetMVVLVAScore(Move move)
         {
-            if (pieceType == PieceType.None) return 0;
-            int file = squareIndex % 8; // Get the file (column) index
-            int rank = squareIndex / 8; // Get the rank (row) index
+            int victimValue = pieceValues[(int)board.GetPiece(move.TargetSquare).PieceType];
+            int attackerValue = pieceValues[(int)board.GetPiece(move.StartSquare).PieceType];
 
-            ulong val = (color == 0 ? squareTable[rank, file] : squareTable[7 - rank, file]);
+            return victimValue - attackerValue;
+        }
 
-            return ((byte)((val >> ((int)(pieceType - 1) * 8)) & 0xff) * (color == 0 ? 1 : -1)) - 50;
+        public double balancer(bool isWhite)
+        {
+            double evaluation = 100;
+            if (isWhite)
+                evaluation = -100;
+            return evaluation;
         }
     }
 }

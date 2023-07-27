@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using ChessChallenge.API;
+using System.Linq;
 
 public class MyBot : IChessBot
 {
@@ -30,8 +32,10 @@ public class MyBot : IChessBot
         double bestValue = isWhite ? int.MinValue : int.MaxValue;
 
         Move bestMove = Move.NullMove;
+        List<Move> legalMoves = board.GetLegalMoves().ToList();
+        legalMoves.Sort((move1, move2) => GetMVVLVAScore(move2).CompareTo(GetMVVLVAScore(move1)));
 
-        foreach (Move move in board.GetLegalMoves())
+        foreach (Move move in legalMoves)
         {
             board.MakeMove(move);
 
@@ -63,7 +67,7 @@ public class MyBot : IChessBot
     public double Minimax(int depth, double alpha, double beta, bool maximizingPlayer)
     {
         if (board.IsRepeatedPosition())
-            return materialEvaluation() - 100;
+            return (materialEvaluation() - balancer(maximizingPlayer));
 
         if (depth == 0 || board.IsDraw() || board.IsInCheckmate())
             return MaterialAndPositionEvaluation();
@@ -73,6 +77,11 @@ public class MyBot : IChessBot
             board.MakeMove(move);
 
             double value = Minimax(depth - 1, alpha, beta, !maximizingPlayer);
+            // Check for stalemate
+            if (board.GetLegalMoves().Length == 0 && !board.IsInCheck())
+            {
+                value += balancer(maximizingPlayer);
+            }
 
             board.UndoMove(move);
 
@@ -132,6 +141,22 @@ public class MyBot : IChessBot
                 evaluation += count * (color == 0 ? pieceValues[(int)pieceType] : -pieceValues[(int)pieceType]);
             }
         }
+        return evaluation;
+    }
+
+    public int GetMVVLVAScore(Move move)
+    {
+        int victimValue = pieceValues[(int)board.GetPiece(move.TargetSquare).PieceType];
+        int attackerValue = pieceValues[(int)board.GetPiece(move.StartSquare).PieceType];
+
+        return victimValue - attackerValue;
+    }
+
+    public double balancer(bool isWhite)
+    {
+        double evaluation = 100;
+        if (isWhite)
+            evaluation = -100;
         return evaluation;
     }
 }
